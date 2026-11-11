@@ -13,11 +13,12 @@ checks**. Unity Build Automation build 2 (`cea8006`) was run in desktop Chrome:
 the environment renders, the robot remains grounded, movement and inventory
 respond, and the previous collider/orientation errors are absent.
 
-This revision adds versioned local saves and unfinished-room rollback. The core
-save rules pass JSON round-trip and invalid-data checks; the Unity storage adapter
-still needs a fresh cloud build and browser reload test. Native iOS, phone input,
-full progression and sustained performance remain unverified. No 60-fps claim is
-made.
+Build 3 (`d872917`) verifies versioned local saves in desktop Chrome: an equipment
+change survives closing/reopening the game tab; leaving an unfinished fight by
+closing the tab restores the prior safe room, entry health and loadout; a damaged
+primary save recovers from backup. All 15 core checks also pass in GitHub Actions.
+Native iOS, phone input, full progression and sustained performance remain
+unverified. No 60-fps claim is made.
 
 - [Design decisions and open questions](docs/DESIGN.md)
 - [Cloud build and phone testing setup](docs/CLOUD_BUILDS.md)

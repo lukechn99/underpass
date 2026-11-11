@@ -24,7 +24,7 @@ defeat/recovery responds. No missing primitive collider or orientation-lock erro
 were captured. This verifies the startup fixes following build 1; it does not
 verify native rendering, phone controls, complete progression or performance.
 
-## Local persistence: core tested; Unity adapter awaiting build
+## Local persistence: build 3 browser checks passed
 
 - Engine-independent, versioned DTOs capture completed progress and room-entry
   health/inventory for unfinished encounters without mutating the live fight.
@@ -35,14 +35,20 @@ verify native rendering, phone controls, complete progression or performance.
   labelled temporary session rather than overwrite recoverable data.
 - Periodic saves every unscaled second plus conquest, defeat, inventory toggles,
   pause/focus/quit callbacks. Unchanged snapshots do not write storage.
-- PlayerPrefs uses IndexedDB on Web builds; browser flushing, quota failures,
-  native app termination and real iPhone behaviour still require artifact/device
-  tests. The final second of changes may be lost on abrupt termination. No cloud
+- Build 3 (`d872917`) was tested using the exact downloaded Unity artifact in
+  desktop Chrome. A safe-room unequip survives closing/reopening the game tab.
+  Entering hostile L1-B, taking damage and unequipping a gun, then closing the tab
+  restores L1-A, health 100 and both entry-mounted guns. In an isolated test
+  profile, changing the primary JSON version to an unsupported value causes a
+  validation warning and successful backup recovery. No runtime errors occurred.
+- PlayerPrefs IndexedDB records were inspected to confirm the saved loadout.
+  These tests reused the same browser context across new tabs; they do not prove
+  full browser-process restart, OS termination, storage quota or iPhone behaviour. The final second of changes may be lost on abrupt termination. No cloud
   sync, account save or cross-device progress is introduced.
 
 ## Next, in order
 
-1. Rebuild main to compile the persistence adapter; test reload and backup recovery.
+1. Verify automatic builds after fixing GitHub webhook permissions.
 2. Download/run that exact Web artifact; verify keyboard/mouse, input mapping,
    camera, light visibility, collision, room transitions, inventory and pause.
 3. Export/sign a minimal iOS app and install it through internal TestFlight.

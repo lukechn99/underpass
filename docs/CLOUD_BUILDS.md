@@ -33,9 +33,15 @@ In Unity Cloud, open DevOps → Build Automation:
 5. Trigger one build, inspect the complete log, then download and serve the
    output with its accompanying files. This first build validates Unity source,
    shader inclusion, module requirements and project setup.
-6. Add automatic source triggers only at the cadence desired for iteration;
-   review the service's current usage limits and plan. No paid usage is enabled
-   by this repository.
+6. Enable **Auto-build** in the target's Scheduling settings and save. The
+   GitHub connection also needs webhook permission: for a fine-grained token,
+   **Contents: Read-only** and **Webhooks: Read and write** on this repository.
+   A classic token needs `write:repo_hook` in addition to its source access.
+   Keep the token in Unity's credential store. Manual builds succeeding does not
+   prove automatic triggering works. Check GitHub repository Settings → Webhooks
+   for the Unity hook and its latest push delivery; verify branch `main`.
+   Review the service's current usage limits and plan. Automatic build triggering
+   remains unverified until a new push creates a matching build attempt.
 
 ## Then: native iOS
 
