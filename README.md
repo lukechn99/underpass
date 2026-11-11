@@ -8,13 +8,16 @@ quick play. Single-player first, with future co-op considered in the architectur
 ## Current status
 
 This is the **initial source foundation and whitebox technical trial**, not a
-finished or performance-validated game. The shared C# rules passed 11 local
-scenario checks and GitHub Actions. Unity Build Automation build 1 successfully
-compiled the Web trial with Unity 6000.3.28f1. Running that artifact in Chrome
-exposed stripped primitive colliders and a black environment; this revision adds
-explicit linker preservation, collision initialization and ambient-light fixes.
-**A new cloud build is required to verify those runtime fixes.** No iPhone or
-native iOS performance measurement has been made; no 60-fps claim is made.
+finished or performance-validated game. The shared C# rules pass **15 scenario
+checks**. Unity Build Automation build 2 (`cea8006`) was run in desktop Chrome:
+the environment renders, the robot remains grounded, movement and inventory
+respond, and the previous collider/orientation errors are absent.
+
+This revision adds versioned local saves and unfinished-room rollback. The core
+save rules pass JSON round-trip and invalid-data checks; the Unity storage adapter
+still needs a fresh cloud build and browser reload test. Native iOS, phone input,
+full progression and sustained performance remain unverified. No 60-fps claim is
+made.
 
 - [Design decisions and open questions](docs/DESIGN.md)
 - [Cloud build and phone testing setup](docs/CLOUD_BUILDS.md)
@@ -64,7 +67,7 @@ folder over HTTP(S). The analogous `Underpass.Editor.TrialBuild.IOS` entry point
 exports an Xcode project to `Build/iOS` on a suitably configured builder. It does
 not sign the app or upload it to TestFlight.
 
-### Whitebox controls (pending Unity validation)
+### Whitebox controls
 
 - **WASD:** move; **mouse/trackpad:** look; **hold primary click:** fire all mounts.
 - **Touch:** left lower region is the movement stick; right lower region aims
@@ -77,6 +80,11 @@ not sign the app or upload it to TestFlight.
 - Walk onto the black descent marker in room D to enter the second layer.
 
 The UI, creature meshes, attacks, robot shape and room art are placeholders.
-The world is currently in-memory; on-device pause restoration is wired, but
-durable local save files, full app-restart recovery, device benchmarks and final
-gameplay visibility are not implemented yet.
+Progress is saved to platform-local PlayerPrefs storage (IndexedDB on the web).
+An unfinished room resumes at the last safe room with room-entry health and
+inventory; completed rooms, checkpoints and shared storage persist. Saves are
+checked every second and at conquest, defeat, inventory toggles and app lifecycle
+callbacks. A backup is kept; unreadable saves are preserved while a temporary
+session runs. Private browsing, site-data deletion and platform storage eviction
+can remove local progress. Browser/native storage behaviour still needs device
+validation. Device benchmarks and final gameplay visibility are not implemented.

@@ -53,7 +53,7 @@ namespace Underpass.Core
         }
     }
 
-    public sealed class Expedition
+    public sealed partial class Expedition
     {
         readonly Dictionary<string, Room> rooms;
         readonly Dictionary<string, Equipment> owned = new Dictionary<string, Equipment>();

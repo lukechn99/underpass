@@ -5,7 +5,7 @@ using Underpass.Core;
 
 static class Program
 {
-    static int failures;
+    static int failures, total;
     static void Expect(bool condition, string message)
     {
         if (!condition) throw new Exception(message);
@@ -33,6 +33,7 @@ static class Program
 
     static void Run(string name, Action test)
     {
+        total++;
         try { test(); Console.WriteLine("PASS " + name); }
         catch (Exception e) { failures++; Console.WriteLine("FAIL " + name + ": " + e.Message); }
     }
@@ -117,7 +118,60 @@ static class Program
                 Expect(a.Damage == b.Damage && a.Interval == b.Interval, "Non-deterministic roll");
             }
         });
-        Console.WriteLine("Core scenarios: " + (11 - failures) + " passed, " + failures + " failed");
+        Run("save JSON roundtrip preserves checkpoint, variants, storage and mounts", () => {
+            var s = New(); Clear(s, "L2Boss"); s.Enter("L3A");
+            var banked = Find("L3A"); var mounted = Find("L3A", "heavy", WeaponClass.Heavy);
+            s.Collect(banked); s.Collect(mounted); s.Equip(mounted.Id, Mount.LeftShoulder);
+            s.Conquer(0); s.Store(banked.Id); s.ExpandStorage(4); s.Damage(19);
+            var options = new System.Text.Json.JsonSerializerOptions { IncludeFields = true };
+            string json = System.Text.Json.JsonSerializer.Serialize(s.CaptureSave(), options);
+            var data = System.Text.Json.JsonSerializer.Deserialize<ExpeditionSave>(json, options);
+            var r = Expedition.RestoreSave(New().Rooms.Values, "L1A", data);
+            Expect(r.CurrentRoom == "L3A" && r.CheckpointLayer == 2 && r.Health == 81, "Return state changed");
+            Expect(r.StorageCapacity == 12 && r.Stored.Contains(banked.Id) && r.Mounted[Mount.LeftShoulder] == mounted.Id, "Inventory changed");
+            Expect(r.Owned[mounted.Id].Damage == mounted.Damage, "Weapon roll changed");
+            r.Enter("L6A"); r.Defeat();
+            Expect(r.Stored.Contains(banked.Id) && !r.Owned.ContainsKey(mounted.Id), "Reload changed death rules");
+        });
+        Run("saving an unfinished fight restores entry state without changing live play", () => {
+            var s = New(); Clear(s, "L1A"); s.Damage(12); s.Enter("L3A");
+            var item = Find("L3A"); s.Collect(item); s.Equip(item.Id, Mount.LeftArm); s.Damage(50);
+            var r = Expedition.RestoreSave(New().Rooms.Values, "L1A", s.CaptureSave());
+            Expect(s.Health == 38 && s.RoomInProgress && s.Owned.ContainsKey(item.Id), "Capture interrupted live fight");
+            Expect(r.Health == 88 && r.CurrentRoom == "L1A" && !r.RoomInProgress, "Entry return state wrong");
+            Expect(!r.Owned.ContainsKey(item.Id) && r.Mounted[Mount.LeftArm] == "starter-left", "Unsecured gains survived reload");
+            Expect(!r.Rooms["L3A"].Conquered, "Unfinished room cleared on reload");
+        });
+        Run("corrupt or unsupported saves fail without mutating room definitions", () => {
+            var s = New(); Clear(s, "L2Boss");
+            Action<Action<ExpeditionSave>> rejects = mutate => {
+                var data = s.CaptureSave(); mutate(data);
+                var definitions = New().Rooms.Values.ToArray();
+                bool rejected = false;
+                try { Expedition.RestoreSave(definitions, "L1A", data); }
+                catch (ArgumentException) { rejected = true; }
+                Expect(rejected, "Invalid save accepted");
+                Expect(definitions.All(r => !r.Conquered), "Failed restore mutated input definitions");
+            };
+            rejects(d => d.Version = 99);
+            rejects(d => d.World = "other-world");
+            rejects(d => d.Health = float.NaN);
+            rejects(d => d.CurrentRoom = "unknown");
+            rejects(d => d.CheckpointLayer = 5);
+            rejects(d => d.Carried = new[] { "starter-left" });
+            rejects(d => d.Mounts[0].Mount = 99);
+            rejects(d => d.Equipment[0].Class = 99);
+            rejects(d => d.Equipment[0].Damage = -1);
+            rejects(d => d.Conquered = null);
+            rejects(d => d.StorageCapacity = -1);
+        });
+        Run("starter source strings tolerate Unity JSON null-to-empty conversion", () => {
+            var s = New(); var data = s.CaptureSave();
+            foreach (var item in data.Equipment) item.SourceRoom = "";
+            var r = Expedition.RestoreSave(New().Rooms.Values, "L1A", data);
+            Expect(r.Mounted.Count == 2, "Unity starter strings rejected");
+        });
+        Console.WriteLine("Core scenarios: " + (total - failures) + " passed, " + failures + " failed");
         return failures == 0 ? 0 : 1;
     }
 }

@@ -28,6 +28,8 @@ namespace Underpass.Prototype
         readonly float[] shotExpiry = new float[32];
         int nextShot;
         Expedition state;
+        readonly LocalExpeditionStore saves = new LocalExpeditionStore();
+        float nextSave;
         GameObject layerRoot, robot;
         Transform torso, leftLeg, rightLeg;
         CharacterController motor;
@@ -72,8 +74,14 @@ namespace Underpass.Prototype
             for (int floor = 1; floor <= 2; floor++)
                 for (int i = 0; i < 4; i++) rooms.Add(new Room(Id(floor, i), floor,
                     boss: floor == 1 && i == 3, safePlace: floor == 1 && i == 0));
-            state = new Expedition(rooms, Id(1, 0));
-            state.Enter(Id(1, 0)); state.Conquer(0);
+            state = saves.Load(rooms, Id(1, 0));
+            if (state == null)
+            {
+                state = new Expedition(rooms, Id(1, 0));
+                state.Enter(Id(1, 0)); state.Conquer(0);
+            }
+            layer = state.Rooms[state.CurrentRoom].Layer;
+            saves.Save(state);
             BuildRobot();
             var cameraObject = new GameObject("Following top-down camera");
             view = cameraObject.AddComponent<Camera>();
@@ -205,6 +213,10 @@ namespace Underpass.Prototype
         void Update()
         {
             if (state == null) return;
+            if (Time.unscaledTime >= nextSave)
+            {
+                saves.Save(state); nextSave = Time.unscaledTime + 1;
+            }
             for (int i = 0; i < shots.Length; i++) if (Time.time >= shotExpiry[i]) shots[i].enabled = false;
             if (Input.GetKeyDown(KeyCode.I)) ToggleInventory();
             if (Input.GetKeyDown(KeyCode.Tab)) showMap = !showMap;
@@ -248,7 +260,10 @@ namespace Underpass.Prototype
 
         void ConquerIfClear()
         {
-            if (state.RoomInProgress && !creatures.Any(e => e.Room == state.CurrentRoom && e.Health > 0)) state.Conquer(0);
+            if (state.RoomInProgress && !creatures.Any(e => e.Room == state.CurrentRoom && e.Health > 0))
+            {
+                state.Conquer(0); saves.Save(state);
+            }
         }
 
         void ReadControls()
@@ -362,20 +377,23 @@ namespace Underpass.Prototype
 
         void Die()
         {
-            state.Defeat(); layer = state.CheckpointLayer < 1 ? 1 : state.CheckpointLayer;
+            state.Defeat(); saves.Save(state); layer = state.CheckpointLayer < 1 ? 1 : state.CheckpointLayer;
             inventory = false; Time.timeScale = 1; lastShot.Clear(); BuildLayer(); PlaceAtCurrentRoom();
         }
 
-        void ToggleInventory() { inventory = !inventory; Time.timeScale = inventory ? .2f : 1; }
+        void ToggleInventory() { inventory = !inventory; Time.timeScale = inventory ? .2f : 1; saves.Save(state); }
         void LateUpdate() { if (view != null) view.transform.position = robot.transform.position + Vector3.up * 22; }
         void OnDestroy() { Time.timeScale = 1; foreach (Material material in palette.Values) Destroy(material); }
 
         void OnApplicationPause(bool paused)
         {
             if (!paused || state == null) return;
-            state.StopUnfinishedEncounter(); layer = state.Rooms[state.CurrentRoom].Layer;
+            state.StopUnfinishedEncounter(); saves.Save(state); layer = state.Rooms[state.CurrentRoom].Layer;
             inventory = false; Time.timeScale = 1; BuildLayer(); PlaceAtCurrentRoom();
         }
+
+        void OnApplicationQuit() { saves.Save(state); }
+        void OnApplicationFocus(bool focused) { if (!focused) saves.Save(state); }
 
         void OnGUI()
         {
@@ -399,6 +417,7 @@ namespace Underpass.Prototype
                 GUI.Box(new Rect(Screen.width - 220,110,210,145), "Layer " + layer + " · authored layout");
                 for (int i = 0; i < 4; i++) GUI.Label(new Rect(Screen.width - 210 + i % 2 * 100,145 + i / 2 * 45,100,40), "ABCD"[i] + (state.Rooms[Id(layer,i)].Conquered ? " cleared" : " hostile") + (i == 3 ? " ↓" : ""));
             }
+            GUI.Label(new Rect(20,Screen.height - 25,Screen.width - 40,25), saves.Status);
             if (!inventory) return;
             GUI.Box(new Rect(15,105,Mathf.Min(760,Screen.width - 30),Screen.height - 120), "Inventory — world slowed to 20% (provisional)");
             int y = 140;
