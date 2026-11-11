@@ -14,7 +14,7 @@ mutex under its read-only user home. Local verification invoked the SDK's C#
 compiler directly and ran the resulting assembly; no HOME override or weakened
 game tests were used. CI runs in a normal writable runner environment.
 
-## Source prepared; NOT validated in Unity yet
+## Unity Web build 1: compiled; startup fixes awaiting rebuild
 
 - Unity 6000.3.28f1 project, build entry scene and preparation/export hooks.
 - Runtime whitebox: two authored four-room layers, movement, free torso aiming,
@@ -27,15 +27,24 @@ game tests were used. CI runs in a normal writable runner environment.
 - The first boss has no additional hostile actors, so boss defeat and room
   conquest coincide for this initial trial.
 
-No Unity editor/license is configured locally. The official Linux editor alone
-has an installed size larger than this workspace's available disk, before adding
-Web/iOS modules. Use the configured cloud build service as the first Unity gate.
-There is no successful Unity/Web/iOS compilation, screenshot, phone install or
-performance measurement yet. Treat the whitebox source as needing that gate.
+Unity Build Automation build 1 successfully compiled commit `cfddc11` with
+Unity 6000.3.28f1. The exact downloaded Web artifact was exercised in desktop
+Chrome using software rendering. Inventory UI responded, but the environment
+was black and runtime logs reported missing BoxCollider and CapsuleCollider
+classes. Runtime-created primitives need explicit linker preservation because
+the empty entry scene has no serialized references to these component types.
+
+The follow-up preserves only the primitive mesh/collider types used by the
+trial, disables decorative colliders immediately before deferred destruction,
+synchronizes physics transforms before placing the controller, and explicitly
+selects flat ambient lighting. Missing required colliders now fail explicitly.
+Browser builds also skip the unsupported orientation-lock call. These source
+fixes require a new Unity artifact before claiming playable startup. Native iOS,
+phone input, gameplay progression and performance remain unverified.
 
 ## Next, in order
 
-1. Run Unity import and the Web build in Build Automation; fix reported errors.
+1. Rebuild main in Build Automation to validate the startup fixes.
 2. Download/run that exact Web artifact; verify keyboard/mouse, input mapping,
    camera, light visibility, collision, room transitions, inventory and pause.
 3. Export/sign a minimal iOS app and install it through internal TestFlight.

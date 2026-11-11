@@ -54,7 +54,9 @@ namespace Underpass.Prototype
         void Start()
         {
             Application.targetFrameRate = 60;
+#if !UNITY_WEBGL
             Screen.orientation = ScreenOrientation.LandscapeLeft;
+#endif
             solid = Resources.Load<Material>("TrialSolid");
             unlit = Resources.Load<Material>("TrialUnlit");
             if (solid == null || unlit == null)
@@ -79,6 +81,7 @@ namespace Underpass.Prototype
             view.transform.rotation = Quaternion.Euler(90, 0, 0);
             view.backgroundColor = new Color(.015f, .02f, .028f);
             view.clearFlags = CameraClearFlags.SolidColor;
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(.035f, .04f, .05f);
             QualitySettings.pixelLightCount = 8;
             BuildLayer(); PlaceAtCurrentRoom();
@@ -93,7 +96,14 @@ namespace Underpass.Prototype
             var obj = GameObject.CreatePrimitive(type); obj.name = name;
             obj.transform.SetParent(parent, false); obj.transform.localPosition = position; obj.transform.localScale = scale;
             obj.GetComponent<Renderer>().sharedMaterial = Tint(color);
-            if (!collision) Destroy(obj.GetComponent<Collider>());
+            var collider = obj.GetComponent<Collider>();
+            if (collision && collider == null)
+                throw new InvalidOperationException("Primitive collider missing for " + name + ". Check Assets/link.xml stripping rules.");
+            if (!collision && collider != null)
+            {
+                collider.enabled = false;
+                Destroy(collider);
+            }
             return obj;
         }
 
@@ -344,7 +354,10 @@ namespace Underpass.Prototype
 
         void PlaceAtCurrentRoom()
         {
-            motor.enabled = false; robot.transform.position = Centre(Index(state.CurrentRoom)) + new Vector3(-4,.1f,-4); motor.enabled = true;
+            motor.enabled = false;
+            robot.transform.position = Centre(Index(state.CurrentRoom)) + new Vector3(-4,.1f,-4);
+            Physics.SyncTransforms();
+            motor.enabled = true;
         }
 
         void Die()

@@ -8,10 +8,13 @@ quick play. Single-player first, with future co-op considered in the architectur
 ## Current status
 
 This is the **initial source foundation and whitebox technical trial**, not a
-finished or performance-validated game. The shared C# rules have passed 11 local
-scenario checks. **The Unity scripts and builds have not yet been compiled or
-run in Unity**: the current development workspace has no Unity editor/license.
-Cloud build configuration is the next validation gate. No 60-fps claim is made.
+finished or performance-validated game. The shared C# rules passed 11 local
+scenario checks and GitHub Actions. Unity Build Automation build 1 successfully
+compiled the Web trial with Unity 6000.3.28f1. Running that artifact in Chrome
+exposed stripped primitive colliders and a black environment; this revision adds
+explicit linker preservation, collision initialization and ambient-light fixes.
+**A new cloud build is required to verify those runtime fixes.** No iPhone or
+native iOS performance measurement has been made; no 60-fps claim is made.
 
 - [Design decisions and open questions](docs/DESIGN.md)
 - [Cloud build and phone testing setup](docs/CLOUD_BUILDS.md)
