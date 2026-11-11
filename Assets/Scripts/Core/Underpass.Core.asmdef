@@ -1,0 +1,5 @@
+{
+  "name": "Underpass.Core",
+  "rootNamespace": "Underpass.Core",
+  "noEngineReferences": true
+}

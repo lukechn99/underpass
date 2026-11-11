@@ -1,0 +1,16 @@
+name: Core rules
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Check shared gameplay rules
+        run: dotnet run --project Tests/Core/Underpass.Core.Checks.csproj --configuration Release
