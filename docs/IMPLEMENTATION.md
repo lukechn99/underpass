@@ -46,7 +46,7 @@ verify native rendering, phone controls, complete progression or performance.
   full browser-process restart, OS termination, storage quota or iPhone behaviour. The final second of changes may be lost on abrupt termination. No cloud
   sync, account save or cross-device progress is introduced.
 
-## Exploration map: core tested; Unity artifact pending
+## Exploration map: build 6 browser checks passed
 
 - Room discovery is independent of conquest; retreat, defeat and unfinished-room
   rollback retain knowledge without preserving unearned equipment.
@@ -58,12 +58,31 @@ verify native rendering, phone controls, complete progression or performance.
 - Four additional scenarios verify discovery lifetime, unfinished-fight saves,
   migration and invalid discoveries. Nineteen core scenarios pass locally.
 - This is a room-level map milestone. Within-room terrain reveal, layer browsing,
-  lighting occlusion and final cartographic art remain future work. Presentation
-  and actual Unity migration require a new cloud artifact before being verified.
+  lighting occlusion and final cartographic art remain future work.
+- Build 6 (`4e7e02a`, automatically triggered via polling) starts cleanly. A real
+  version-1 equipment save loaded in the map build with its loadout intact. The
+  initial map reveals only A; entering B reveals its footprint/obstacles and the
+  A–B connection. Restoring saved IndexedDB data in a fresh browser context keeps
+  B mapped while returning the robot to A with room-entry health.
+
+## Web update caching: packaging fix awaiting artifact
+
+The test server's in-place build-3 → build-6 upgrade in a warm browser context
+failed with a loader `RangeError: Maximum call stack size exceeded`. Fresh-context
+migration passed, and repeating the same-address upgrade with HTTP caching
+bypassed also passed while keeping the local save database. This points to stale
+HTTP build assets rather than the save migration; the exact cached-file mismatch
+was not isolated.
+
+The build hook now enables `PlayerSettings.WebGL.nameFilesAsHashes` so changed
+binary contents receive distinct URLs. Verify the generated filenames and repeat
+the warm-cache upgrade with the next artifact before treating this as resolved.
+A production host should revalidate `index.html` and publish the build atomically.
+Do not clear the local save database to work around asset caching.
 
 ## Next, in order
 
-1. Run the automatic map build; verify map visibility and version-1 save migration.
+1. Verify content-hashed output and warm-cache upgrades with the next Web artifact.
 2. Download/run that exact Web artifact; verify keyboard/mouse, input mapping,
    camera, light visibility, collision, room transitions, inventory and pause.
 3. Export/sign a minimal iOS app and install it through internal TestFlight.

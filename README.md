@@ -23,8 +23,12 @@ unverified. No 60-fps claim is made.
 The next revision adds a room exploration map with authored floor/obstacle
 footprints, revealed connections, safe/checkpoint markers and the player position.
 Discovery persists across retreat, defeat and reload. Save version 1 migrates to
-version 2 without exposing unvisited rooms. All 19 core checks pass locally;
-map rendering and migration in Unity await the new cloud artifact.
+version 2 without exposing unvisited rooms. All 19 core checks pass locally.
+Build 6 (`4e7e02a`) verified the map, discovery persistence and old-save migration
+in desktop Chrome. A warm-cache in-place update failed in the test server and
+passed with HTTP caching bypassed; the next build enables content-hashed asset
+filenames to prevent changed binaries sharing URLs. That packaging change still
+requires artifact verification.
 
 - [Design decisions and open questions](docs/DESIGN.md)
 - [Cloud build and phone testing setup](docs/CLOUD_BUILDS.md)

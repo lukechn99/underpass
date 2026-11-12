@@ -28,6 +28,8 @@ namespace Underpass.Editor
             PlayerSettings.allowedAutorotateToLandscapeRight = true;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, "com.lukechn99.underpass");
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.iOS, ScriptingImplementation.IL2CPP);
+            // Changed binaries need new URLs so repeat visitors cannot mix builds.
+            PlayerSettings.WebGL.nameFilesAsHashes = true;
             PlayerSettings.WebGL.decompressionFallback = true;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(Scene, true) };
