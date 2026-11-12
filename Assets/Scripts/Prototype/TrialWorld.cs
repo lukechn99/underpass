@@ -8,7 +8,7 @@ using static Underpass.Prototype.SewerLayout;
 namespace Underpass.Prototype
 {
     // Deliberately replaceable whitebox presentation. No benchmark/UI dependency in Core.
-    public sealed class TrialWorld : MonoBehaviour
+    public sealed partial class TrialWorld : MonoBehaviour
     {
         sealed class Creature
         {
@@ -46,7 +46,7 @@ namespace Underpass.Prototype
         Vector2 leftOrigin, rightOrigin;
         Vector2 leftThumb, rightThumb;
         float gait;
-        Material solid, unlit;
+        Material solid, unlit, abyss;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void StartTrial()
@@ -56,6 +56,7 @@ namespace Underpass.Prototype
 
         void Start()
         {
+            SewerLayout.Validate();
             Application.targetFrameRate = 60;
 #if !UNITY_WEBGL
             Screen.orientation = ScreenOrientation.LandscapeLeft;
@@ -64,6 +65,7 @@ namespace Underpass.Prototype
             unlit = Resources.Load<Material>("TrialUnlit");
             if (solid == null || unlit == null)
                 throw new InvalidOperationException("Trial materials missing. Run Underpass > Prepare trial in Unity.");
+            abyss = new Material(unlit) { color = Color.black };
             for (int i = 0; i < shots.Length; i++)
             {
                 shots[i] = new GameObject("Pooled shot " + i).AddComponent<LineRenderer>();
@@ -149,12 +151,13 @@ namespace Underpass.Prototype
         void BuildLayer()
         {
             if (layerRoot != null) { layerRoot.SetActive(false); Destroy(layerRoot); }
+            foreach (Mesh mesh in terrainMeshes) Destroy(mesh); terrainMeshes.Clear();
             layerRoot = new GameObject("Sewer layer " + layer); creatures.Clear(); crates.Clear(); vents.Clear();
             var concrete = new Color(.24f,.28f,.32f);
             for (int i = 0; i < 4; i++)
             {
                 Vector3 c = Centre(i);
-                Shape(PrimitiveType.Cube, "Authored room floor", c - Vector3.up * .3f, new Vector3(RoomWidth,.6f,RoomWidth), concrete, layerRoot.transform);
+                BuildRoomFloor(i, concrete);
                 // Door gaps and outer boundaries are authored; no procedural gameplay layout.
                 for (int side = 0; side < 4; side++)
                 {
@@ -168,8 +171,7 @@ namespace Underpass.Prototype
                         for (int part = -1; part <= 1; part += 2)
                             Shape(PrimitiveType.Cube, "Door jamb wall", c + edge + (alongX ? Vector3.forward : Vector3.right) * part * 6,
                                 alongX ? new Vector3(.6f,2.4f,8) : new Vector3(8,2.4f,.6f), concrete, layerRoot.transform);
-                        if (sign > 0) Shape(PrimitiveType.Cube, "Door connection floor", c + (alongX ? Vector3.right : Vector3.forward) * 11 - Vector3.up * .3f,
-                            alongX ? new Vector3(3,.6f,4) : new Vector3(4,.6f,3), concrete, layerRoot.transform);
+                        if (sign > 0) BuildPipePassage(c + (alongX ? Vector3.right : Vector3.forward) * 11, alongX);
                     }
                 }
                 Shape(PrimitiveType.Cylinder, "Rust pipe", c + PipeOffset, new Vector3(.8f,1,.8f), new Color(.45f,.22f,.1f), layerRoot.transform);
@@ -186,7 +188,7 @@ namespace Underpass.Prototype
                 if (state.Owned.ContainsKey(roomId + "/equipment")) crate.SetActive(false);
                 SpawnRoom(i);
             }
-            Shape(PrimitiveType.Cylinder, "Always-open descent marker", Centre(3) + DescentOffset, new Vector3(3,.02f,3), Color.black, layerRoot.transform, false);
+
         }
 
         void SpawnRoom(int index)
@@ -238,12 +240,9 @@ namespace Underpass.Prototype
                     state.Enter(target);
                 }
                 if (Input.GetKeyDown(KeyCode.E)) Collect();
-                if (Vector3.Distance(robot.transform.position, Centre(3) + new Vector3(4,0,4)) < 1.4f && layer == 1)
-                {
-                    if (state.RoomInProgress) state.Retreat();
-                    layer = 2; state.Enter(Id(2,0)); BuildLayer(); PlaceAtCurrentRoom();
-                }
             }
+            else motor.SimpleMove(Vector3.zero); // Gravity continues while inventory slows the world.
+            if (ResolveFloorFall()) return;
             TickCreatures();
             // A repeatable steam cycle in the two route rooms; this is authored gameplay.
             int current = Index(state.CurrentRoom);
@@ -349,7 +348,8 @@ namespace Underpass.Prototype
                     if (e.Kind == 1 && e.Cycle % 4 < .7f) { if (e.Charge == Vector3.zero) e.Charge = delta.normalized; speed = 6; }
                     else e.Charge = Vector3.zero;
                     Vector3 step = (e.Charge == Vector3.zero ? delta.normalized : e.Charge) * speed * Time.deltaTime;
-                    if (!Physics.Raycast(e.Model.transform.position, step.normalized, step.magnitude + .6f)) e.Model.transform.position += step;
+                    if (!NearOpening(layer, Index(e.Room), e.Model.transform.position + step - Centre(Index(e.Room)), .6f) &&
+                        !Physics.Raycast(e.Model.transform.position, step.normalized, step.magnitude + .6f)) e.Model.transform.position += step;
                     if (delta.magnitude < 1.5f && e.Cooldown <= 0) { state.Damage(e.Kind == 1 ? 15 : 7); e.Cooldown = 1; }
                 }
             }
@@ -380,7 +380,7 @@ namespace Underpass.Prototype
 
         void ToggleInventory() { inventory = !inventory; Time.timeScale = inventory ? .2f : 1; saves.Save(state); }
         void LateUpdate() { if (view != null) view.transform.position = robot.transform.position + Vector3.up * 22; }
-        void OnDestroy() { Time.timeScale = 1; foreach (Material material in palette.Values) Destroy(material); }
+        void OnDestroy() { Time.timeScale = 1; if (abyss != null) Destroy(abyss); foreach (Mesh mesh in terrainMeshes) Destroy(mesh); foreach (Material material in palette.Values) Destroy(material); }
 
         void OnApplicationPause(bool paused)
         {

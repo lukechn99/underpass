@@ -88,7 +88,10 @@ not sign the app or upload it to TestFlight.
 - **Tab / Map:** explored rooms, obstacles, connections, safe places and current position.
 - **F9:** deliberately trigger defeat to exercise recovery rules.
 - **Recover:** heal at a prototype safe place.
-- Walk onto the black descent marker in room D to enter the second layer.
+- Amber-edged missing floor is lethal: falling triggers normal defeat/recovery.
+- The blue-rimmed, absolute-black opening in layer-1 room D leads to layer 2,
+  even with the boss alive. Other rooms connect through cutaway sewer pipes.
+- Terrain openings/pipe presentation are source changes awaiting artifact verification.
 
 The UI, creature meshes, attacks, robot shape and room art are placeholders.
 Progress is saved to platform-local PlayerPrefs storage (IndexedDB on the web).

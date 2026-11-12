@@ -80,9 +80,29 @@ the warm-cache upgrade with the next artifact before treating this as resolved.
 A production host should revalidate `index.html` and publish the build atomically.
 Do not clear the local save database to work around asset caching.
 
+## Floor hazards and pipe passages: source prepared; artifact pending
+
+- Floors are partitioned around authored rectangular openings, with no floor
+  colliders inside them. Lethal shafts have amber rims and lit, visible inner
+  surfaces; the layer-1 descent uses an unlit absolute-black interior and blue rim.
+- A fall below the floor threshold triggers normal defeat, except within the
+  authored layer-descent opening, which enters layer 2 without requiring conquest.
+  Inventory slow motion no longer suspends character gravity.
+- Cutaway lower pipe shells, metal bands, walkways and side collision replace
+  plain inter-room floor strips. The top remains open for the gameplay camera.
+- The exploration map uses the same opening definitions and distinguishes lethal
+  shafts from descent. Runtime-generated pipe meshes are destroyed on layer rebuild.
+- Layout validation runs before cloud builds and at startup: keep gaps inside room
+  edges, prevent overlap between opening types, and protect recovery, cover,
+  equipment and enemy spawn positions. Ground creatures stop short of openings;
+  full pathfinding around them is not implemented.
+- No new core progression rules: falls reuse existing defeat/descent flows. Unity
+  compilation, fall collision, black-hole lighting, recovery, map accuracy and
+  phone-scale pipe visibility require verification in the next build.
+
 ## Next, in order
 
-1. Verify content-hashed output and warm-cache upgrades with the next Web artifact.
+1. Verify floor hazards, descent, pipe collisions and content-hashed output in the next Web artifact.
 2. Download/run that exact Web artifact; verify keyboard/mouse, input mapping,
    camera, light visibility, collision, room transitions, inventory and pause.
 3. Export/sign a minimal iOS app and install it through internal TestFlight.
@@ -107,4 +127,4 @@ damage/interval trades. Built-in renderer is a bootstrap baseline; production
 rendering is still subject to the technical trial.
 
 The map reveals visited room footprints, not terrain gradually within a room.
-The placeholder descent marker is not final hole geometry or animation.
+Descent now has an actual floor opening; final falling/transition animation remains open.

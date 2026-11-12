@@ -18,6 +18,7 @@ namespace Underpass.Editor
         [MenuItem("Underpass/Prepare trial")]
         public static void Prepare()
         {
+            Underpass.Prototype.SewerLayout.Validate();
             PlayerSettings.companyName = "Underpass";
             PlayerSettings.productName = "Underpass";
             PlayerSettings.defaultScreenWidth = 1280; PlayerSettings.defaultScreenHeight = 720;

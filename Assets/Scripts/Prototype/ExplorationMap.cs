@@ -47,10 +47,16 @@ namespace Underpass.Prototype
                 Fill(Footprint(c + CoverOffset, 2, 2), new Color(.65f,.7f,.74f));
                 Fill(Footprint(c + PipeOffset, .8f, .8f), new Color(.85f,.45f,.16f));
                 if (i == 1 || i == 2) Fill(Footprint(c + SteamOffset, 4, 4), new Color(.8f,.35f,.1f,.7f));
+                Rect lethal = LethalGap(i);
+                Vector3 gapCentre = c + new Vector3(lethal.center.x,0,lethal.center.y);
+                Fill(Footprint(gapCentre,lethal.width+.3f,lethal.height+.3f), new Color(1,.6f,.1f));
+                Fill(Footprint(gapCentre,lethal.width,lethal.height), new Color(.12f,.17f,.2f));
                 Vector2 title = Project(c + new Vector3(-8,0,8));
                 GUI.Label(new Rect(title.x,title.y,RoomWidth * scale,24), "ABCD"[i] + (room.Conquered ? " · clear" : " · hostile"));
                 if (i == 3 && layer == 1)
                 {
+                    Fill(Footprint(c + DescentOffset,DescentGap.width+.3f,DescentGap.height+.3f), new Color(.15f,.5f,.8f));
+                    Fill(Footprint(c + DescentOffset,DescentGap.width,DescentGap.height), Color.black);
                     Vector2 hole = Project(c + DescentOffset);
                     GUI.Label(new Rect(hole.x-12,hole.y-12,60,24), "↓ 2");
                 }
@@ -62,7 +68,7 @@ namespace Underpass.Prototype
             }
             Fill(Footprint(position, 1.3f, 1.3f), new Color(.25f,.85f,1));
             GUI.Label(new Rect(panel.x+12,map.yMax+5,size,24), "Blue: you · green: cleared · brown: hostile", legend);
-            GUI.Label(new Rect(panel.x+12,map.yMax+29,size,24), "Visited rooms only · exploration survives defeat", legend);
+            GUI.Label(new Rect(panel.x+12,map.yMax+29,size,24), "Amber: lethal gap · blue-rimmed black: descent", legend);
         }
     }
 }
