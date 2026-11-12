@@ -366,6 +366,10 @@ namespace Underpass.Prototype
 
         void PlaceAtCurrentRoom()
         {
+            // Before the first boss checkpoint, defeat may repopulate the fallback
+            // room too. Open its encounter so it can be conquered again after recovery.
+            if (!state.RoomInProgress && !state.Rooms[state.CurrentRoom].Conquered)
+                state.Enter(state.CurrentRoom);
             motor.enabled = false;
             robot.transform.position = Centre(Index(state.CurrentRoom)) + new Vector3(-4,.1f,-4);
             Physics.SyncTransforms();

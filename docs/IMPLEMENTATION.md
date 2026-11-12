@@ -80,7 +80,7 @@ the warm-cache upgrade with the next artifact before treating this as resolved.
 A production host should revalidate `index.html` and publish the build atomically.
 Do not clear the local save database to work around asset caching.
 
-## Floor hazards and pipe passages: source prepared; artifact pending
+## Floor hazards and pipe passages: build 9 checks passed
 
 - Floors are partitioned around authored rectangular openings, with no floor
   colliders inside them. Lethal shafts have amber rims and lit, visible inner
@@ -96,13 +96,31 @@ Do not clear the local save database to work around asset caching.
   edges, prevent overlap between opening types, and protect recovery, cover,
   equipment and enemy spawn positions. Ground creatures stop short of openings;
   full pathfinding around them is not implemented.
-- No new core progression rules: falls reuse existing defeat/descent flows. Unity
-  compilation, fall collision, black-hole lighting, recovery, map accuracy and
-  phone-scale pipe visibility require verification in the next build.
+- Build 9 (`c2b01ac`, automatically triggered via polling) compiled and ran in
+  desktop Chrome. A real fall into A's lethal shaft returned the robot to the
+  recovery area at full health. Pipe passages were traversed in the A–C and C–D
+  routes. No runtime errors were captured.
+- In a controlled local-save test with A/C already conquered and D still hostile,
+  the player entered D, walked into its descent shaft with the boss alive, and
+  arrived in L2-A at health 100 with checkpoint layer still 0. The black interior
+  remains RGB (0,0,0) beside robot illumination. The fixture isolates terrain
+  from repeated approach-room combat; it is not an end-to-end fresh-game test.
+- Artifact filenames are content hashes as configured. Full warm-cache upgrade
+  rechecking and phone-scale visibility/performance remain pending.
+
+## Recovery-room follow-up: source fix awaiting artifact
+
+Before the first boss checkpoint, defeat can repopulate the starting fallback
+room. Placement previously left that hostile room without an active encounter,
+so killing its enemies would not conquer it until leaving/re-entering. Placement
+now enters an unconquered recovery room if no encounter is active. This also
+covers loading or resuming in the hostile fallback. The change is isolated to the
+Unity presentation lifecycle; checkpoint/equipment rules are unchanged. Verify
+clearing that room after a pre-checkpoint death in the next artifact.
 
 ## Next, in order
 
-1. Verify floor hazards, descent, pipe collisions and content-hashed output in the next Web artifact.
+1. Verify pre-checkpoint recovery-room conquest with the follow-up Web artifact.
 2. Download/run that exact Web artifact; verify keyboard/mouse, input mapping,
    camera, light visibility, collision, room transitions, inventory and pause.
 3. Export/sign a minimal iOS app and install it through internal TestFlight.
