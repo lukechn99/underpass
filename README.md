@@ -8,7 +8,7 @@ quick play. Single-player first, with future co-op considered in the architectur
 ## Current status
 
 This is the **initial source foundation and whitebox technical trial**, not a
-finished or performance-validated game. The shared C# rules pass **15 scenario
+finished or performance-validated game. The shared C# rules pass **19 scenario
 checks**. Unity Build Automation build 2 (`cea8006`) was run in desktop Chrome:
 the environment renders, the robot remains grounded, movement and inventory
 respond, and the previous collider/orientation errors are absent.
@@ -16,9 +16,15 @@ respond, and the previous collider/orientation errors are absent.
 Build 3 (`d872917`) verifies versioned local saves in desktop Chrome: an equipment
 change survives closing/reopening the game tab; leaving an unfinished fight by
 closing the tab restores the prior safe room, entry health and loadout; a damaged
-primary save recovers from backup. All 15 core checks also pass in GitHub Actions.
+primary save recovers from backup. The 15 pre-map core checks also pass in GitHub Actions.
 Native iOS, phone input, full progression and sustained performance remain
 unverified. No 60-fps claim is made.
+
+The next revision adds a room exploration map with authored floor/obstacle
+footprints, revealed connections, safe/checkpoint markers and the player position.
+Discovery persists across retreat, defeat and reload. Save version 1 migrates to
+version 2 without exposing unvisited rooms. All 19 core checks pass locally;
+map rendering and migration in Unity await the new cloud artifact.
 
 - [Design decisions and open questions](docs/DESIGN.md)
 - [Cloud build and phone testing setup](docs/CLOUD_BUILDS.md)
@@ -75,7 +81,7 @@ not sign the app or upload it to TestFlight.
   and fires; drag elsewhere to look without firing.
 - **I / Inventory:** equipment controls, slowing the world to 20% (provisional).
 - **E / Collect:** collect nearby crate equipment; shooting a crate also collects.
-- **Tab / Map:** debug room diagram, not the finished discovery/terrain map.
+- **Tab / Map:** explored rooms, obstacles, connections, safe places and current position.
 - **F9:** deliberately trigger defeat to exercise recovery rules.
 - **Recover:** heal at a prototype safe place.
 - Walk onto the black descent marker in room D to enter the second layer.

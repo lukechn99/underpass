@@ -14,6 +14,7 @@ namespace Underpass.Core
         public int CheckpointLayer, CarryCapacity, StorageCapacity;
         public float Health;
         public string[] Conquered, Carried, Stored;
+        public string[] Discovered;
         public SavedEquipment[] Equipment;
         public SavedMount[] Mounts;
     }
@@ -46,12 +47,13 @@ namespace Underpass.Core
             var reserve = entry == null ? carried : entry.Carried;
             var mounts = entry == null ? mounted : entry.Mounted;
             return new ExpeditionSave {
-                Version = 1, World = SaveWorld,
+                Version = 2, World = SaveWorld,
                 CurrentRoom = LastSafeRoom, CheckpointRoom = CheckpointRoom,
                 CheckpointLayer = CheckpointLayer,
                 CarryCapacity = CarryCapacity, StorageCapacity = StorageCapacity,
                 Health = entry == null ? Health : entry.Health,
                 Conquered = rooms.Values.Where(r => r.Conquered).Select(r => r.Id).OrderBy(id => id).ToArray(),
+                Discovered = rooms.Values.Where(r => r.Discovered).Select(r => r.Id).OrderBy(id => id).ToArray(),
                 Carried = reserve.ToArray(), Stored = stored.OrderBy(id => id).ToArray(),
                 Equipment = items.Values.OrderBy(i => i.Id).Select(i => new SavedEquipment {
                     Id = i.Id, SourceRoom = i.SourceRoom, Class = (int)i.Class,
@@ -65,7 +67,7 @@ namespace Underpass.Core
         // Invalid saves cannot partially mutate the running adventure or room definitions.
         public static Expedition RestoreSave(IEnumerable<Room> definitions, string startRoom, ExpeditionSave save)
         {
-            if (save == null || save.Version != 1 || save.World != SaveWorld ||
+            if (save == null || (save.Version != 1 && save.Version != 2) || save.World != SaveWorld ||
                 save.CarryCapacity < 1 || save.CarryCapacity > 100 || save.StorageCapacity < 1 || save.StorageCapacity > 10000 ||
                 float.IsNaN(save.Health) || float.IsInfinity(save.Health) || save.Health < 0 || save.Health > 100 ||
                 save.Conquered == null || save.Carried == null || save.Stored == null || save.Equipment == null || save.Mounts == null)
@@ -81,6 +83,21 @@ namespace Underpass.Core
                 if (id == null || !s.rooms.ContainsKey(id)) throw new ArgumentException("Unknown conquered room.");
                 s.rooms[id].Conquered = true;
             }
+            // Version 1 did not record visits. Recover only known safe/conquered rooms;
+            // never expose the entire authored world during migration.
+            var discoveries = save.Version == 1
+                ? save.Conquered.Concat(new[] { startRoom, save.CurrentRoom, save.CheckpointRoom }).Distinct().ToArray()
+                : save.Discovered;
+            if (discoveries == null || discoveries.Distinct().Count() != discoveries.Length)
+                throw new ArgumentException("Invalid saved discoveries.");
+            foreach (string id in discoveries)
+            {
+                if (id == null || !s.rooms.ContainsKey(id)) throw new ArgumentException("Unknown discovered room.");
+                s.rooms[id].Discovered = true;
+            }
+            if (!s.rooms[save.CurrentRoom].Discovered || !s.rooms[save.CheckpointRoom].Discovered ||
+                s.rooms.Values.Any(r => r.Conquered && !r.Discovered))
+                throw new ArgumentException("Saved progress references undiscovered rooms.");
             var checkpoint = s.rooms[save.CheckpointRoom];
             if (save.CheckpointLayer == 0 ? save.CheckpointRoom != startRoom :
                 save.CheckpointLayer < 1 || checkpoint.Layer != save.CheckpointLayer || !checkpoint.Boss || !checkpoint.Conquered)

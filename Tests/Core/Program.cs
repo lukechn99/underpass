@@ -171,6 +171,39 @@ static class Program
             var r = Expedition.RestoreSave(New().Rooms.Values, "L1A", data);
             Expect(r.Mounted.Count == 2, "Unity starter strings rejected");
         });
+        Run("exploration reveals entered rooms only and survives retreat and defeat", () => {
+            var s = New();
+            Expect(s.Rooms.Values.Count(r => r.Discovered) == 1 && s.Rooms["L1A"].Discovered, "Initial discovery leaked rooms");
+            s.Enter("L3A"); s.Retreat();
+            Expect(s.Rooms["L3A"].Discovered && !s.Rooms["L3A"].Conquered, "Retreat erased knowledge or cleared enemies");
+            s.Enter("L4A"); s.Defeat();
+            Expect(s.Rooms["L4A"].Discovered && !s.Rooms["L4A"].Conquered, "Defeat erased map knowledge");
+            Expect(!s.Rooms["L6A"].Discovered, "Unvisited room exposed");
+        });
+        Run("unfinished-room discovery persists without preserving its loot", () => {
+            var s = New(); Clear(s, "L1A"); s.Enter("L3A"); s.Collect(Find("L3A"));
+            var r = Expedition.RestoreSave(New().Rooms.Values, "L1A", s.CaptureSave());
+            Expect(r.Rooms["L3A"].Discovered && !r.Rooms["L3A"].Conquered, "Visited hostile room forgotten");
+            Expect(r.CurrentRoom == "L1A" && !r.Owned.ContainsKey(Find("L3A").Id), "Discovery preserved unsecured gains");
+        });
+        Run("version-1 saves migrate without revealing unknown rooms", () => {
+            var s = New(); Clear(s, "L2Boss"); s.Enter("L6A");
+            var old = s.CaptureSave(); old.Version = 1; old.Discovered = null;
+            var r = Expedition.RestoreSave(New().Rooms.Values, "L1A", old);
+            Expect(r.CheckpointLayer == 2 && r.Rooms["L2Boss"].Discovered && r.Rooms["L1A"].Discovered, "Migration lost known safe rooms");
+            Expect(!r.Rooms["L6A"].Discovered && r.CaptureSave().Version == 2, "Migration invented visits or failed to upgrade");
+        });
+        Run("version-2 discovery data rejects unknown, duplicate or missing rooms", () => {
+            var s = New(); Clear(s, "L2Boss");
+            foreach (var bad in new[] { null, new[] { "unknown" }, new[] { "L1A", "L1A" }, new[] { "L1A" } })
+            {
+                var save = s.CaptureSave(); save.Discovered = bad;
+                bool rejected = false;
+                try { Expedition.RestoreSave(New().Rooms.Values, "L1A", save); }
+                catch (ArgumentException) { rejected = true; }
+                Expect(rejected, "Malformed discovery accepted");
+            }
+        });
         Console.WriteLine("Core scenarios: " + (total - failures) + " passed, " + failures + " failed");
         return failures == 0 ? 0 : 1;
     }

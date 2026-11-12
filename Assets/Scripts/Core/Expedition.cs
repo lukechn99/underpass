@@ -14,6 +14,7 @@ namespace Underpass.Core
         public bool Boss { get; }
         public bool SafePlace { get; }
         public bool Conquered { get; internal set; }
+        public bool Discovered { get; internal set; }
         public Room(string id, int layer, bool boss = false, bool safePlace = false)
         {
             if (string.IsNullOrWhiteSpace(id) || layer < 1) throw new ArgumentException("Invalid room.");
@@ -94,13 +95,14 @@ namespace Underpass.Core
             CurrentRoom = LastSafeRoom = CheckpointRoom = startRoom;
             // The starting location is a provisional fallback until the first boss checkpoint.
             CheckpointLayer = 0;
+            rooms[startRoom].Discovered = true;
             RestoreStarters();
         }
 
         public bool Enter(string id)
         {
             if (!rooms.ContainsKey(id) || RoomInProgress) return false;
-            CurrentRoom = id;
+            CurrentRoom = id; rooms[id].Discovered = true;
             if (rooms[id].Conquered) { LastSafeRoom = id; return true; }
             entry = new Entry {
                 Health = Health,

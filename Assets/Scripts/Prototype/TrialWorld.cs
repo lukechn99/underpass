@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Underpass.Core;
 using UnityEngine;
+using static Underpass.Prototype.SewerLayout;
 
 namespace Underpass.Prototype
 {
@@ -95,10 +96,6 @@ namespace Underpass.Prototype
             BuildLayer(); PlaceAtCurrentRoom();
         }
 
-        static string Id(int floor, int index) => "L" + floor + "-" + "ABCD"[index];
-        static int Index(string id) => "ABCD".IndexOf(id[id.Length - 1]);
-        static Vector3 Centre(int index) => new Vector3((index % 2) * 22, 0, (index / 2) * 22);
-
         GameObject Shape(PrimitiveType type, string name, Vector3 position, Vector3 scale, Color color, Transform parent, bool collision = true)
         {
             var obj = GameObject.CreatePrimitive(type); obj.name = name;
@@ -157,7 +154,7 @@ namespace Underpass.Prototype
             for (int i = 0; i < 4; i++)
             {
                 Vector3 c = Centre(i);
-                Shape(PrimitiveType.Cube, "Authored room floor", c - Vector3.up * .3f, new Vector3(20,.6f,20), concrete, layerRoot.transform);
+                Shape(PrimitiveType.Cube, "Authored room floor", c - Vector3.up * .3f, new Vector3(RoomWidth,.6f,RoomWidth), concrete, layerRoot.transform);
                 // Door gaps and outer boundaries are authored; no procedural gameplay layout.
                 for (int side = 0; side < 4; side++)
                 {
@@ -175,10 +172,10 @@ namespace Underpass.Prototype
                             alongX ? new Vector3(3,.6f,4) : new Vector3(4,.6f,3), concrete, layerRoot.transform);
                     }
                 }
-                Shape(PrimitiveType.Cylinder, "Rust pipe", c + new Vector3(-7,1,0), new Vector3(.8f,1,.8f), new Color(.45f,.22f,.1f), layerRoot.transform);
-                if (i == 1 || i == 2) vents[i] = Shape(PrimitiveType.Cylinder, "Timed steam hazard", c + new Vector3(-7,.04f,0),
+                Shape(PrimitiveType.Cylinder, "Rust pipe", c + PipeOffset, new Vector3(.8f,1,.8f), new Color(.45f,.22f,.1f), layerRoot.transform);
+                if (i == 1 || i == 2) vents[i] = Shape(PrimitiveType.Cylinder, "Timed steam hazard", c + SteamOffset,
                     new Vector3(4,.03f,4), Color.gray, layerRoot.transform, false).GetComponent<Renderer>();
-                Shape(PrimitiveType.Cube, "Cover block", c + new Vector3(2,.6f,-2), new Vector3(2,1.2f,2), concrete, layerRoot.transform);
+                Shape(PrimitiveType.Cube, "Cover block", c + CoverOffset, new Vector3(2,1.2f,2), concrete, layerRoot.transform);
                 var lamp = new GameObject(layer == 1 ? "Light from city opening" : "Amber work light").AddComponent<Light>();
                 lamp.transform.SetParent(layerRoot.transform); lamp.transform.position = c + Vector3.up * 5;
                 lamp.type = LightType.Point; lamp.range = layer == 1 ? 15 : 7; lamp.intensity = layer == 1 ? 1.5f : .6f;
@@ -189,7 +186,7 @@ namespace Underpass.Prototype
                 if (state.Owned.ContainsKey(roomId + "/equipment")) crate.SetActive(false);
                 SpawnRoom(i);
             }
-            Shape(PrimitiveType.Cylinder, "Always-open descent marker", Centre(3) + new Vector3(4,.03f,4), new Vector3(3,.02f,3), Color.black, layerRoot.transform, false);
+            Shape(PrimitiveType.Cylinder, "Always-open descent marker", Centre(3) + DescentOffset, new Vector3(3,.02f,3), Color.black, layerRoot.transform, false);
         }
 
         void SpawnRoom(int index)
@@ -412,11 +409,7 @@ namespace Underpass.Prototype
                 if (leftFinger >= 0) GUI.Box(new Rect(leftOrigin.x + leftThumb.x * 55 - 12,Screen.height - leftOrigin.y - leftThumb.y * 55 - 12,24,24), "");
                 if (rightFinger >= 0) GUI.Box(new Rect(rightOrigin.x + rightThumb.x * 55 - 12,Screen.height - rightOrigin.y - rightThumb.y * 55 - 12,24,24), "");
             }
-            if (showMap)
-            {
-                GUI.Box(new Rect(Screen.width - 220,110,210,145), "Layer " + layer + " · authored layout");
-                for (int i = 0; i < 4; i++) GUI.Label(new Rect(Screen.width - 210 + i % 2 * 100,145 + i / 2 * 45,100,40), "ABCD"[i] + (state.Rooms[Id(layer,i)].Conquered ? " cleared" : " hostile") + (i == 3 ? " ↓" : ""));
-            }
+            if (showMap && !inventory) ExplorationMap.Draw(state, layer, robot.transform.position);
             GUI.Label(new Rect(20,Screen.height - 25,Screen.width - 40,25), saves.Status);
             if (!inventory) return;
             GUI.Box(new Rect(15,105,Mathf.Min(760,Screen.width - 30),Screen.height - 120), "Inventory — world slowed to 20% (provisional)");

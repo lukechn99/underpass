@@ -41,7 +41,7 @@ In Unity Cloud, open DevOps → Build Automation:
    prove automatic triggering works. Check GitHub repository Settings → Webhooks
    for the Unity hook and its latest push delivery; verify branch `main`.
    Review the service's current usage limits and plan. Automatic build triggering
-   remains unverified until a new push creates a matching build attempt.
+   was verified by build 5: successful `fd065c5`, trigger `polling`.
 
 ## Then: native iOS
 

@@ -2,7 +2,7 @@
 
 ## Verified locally
 
-`Assets/Scripts/Core` is shared C# with no engine references. Fifteen scenario
+`Assets/Scripts/Core` is shared C# with no engine references. Nineteen scenario
 checks passed using .NET 8's compiler/runtime against these exact source files:
 starter mounts, compatibility, boss checkpoint gating, the layer-2/layer-6 death
 example, storage protection/deduplication, retry consistency, stop restoration,
@@ -46,9 +46,24 @@ verify native rendering, phone controls, complete progression or performance.
   full browser-process restart, OS termination, storage quota or iPhone behaviour. The final second of changes may be lost on abrupt termination. No cloud
   sync, account save or cross-device progress is introduced.
 
+## Exploration map: core tested; Unity artifact pending
+
+- Room discovery is independent of conquest; retreat, defeat and unfinished-room
+  rollback retain knowledge without preserving unearned equipment.
+- A separate Unity map presenter draws explored room footprints, shared authored
+  cover/pipe/hazard offsets, connections between visited rooms, safe/checkpoint
+  markers, the layer-1 descent and current player position.
+- Save schema 2 stores discoveries. Schema 1 remains readable and migrates only
+  known safe/conquered rooms; it cannot reconstruct visits never saved by schema 1.
+- Four additional scenarios verify discovery lifetime, unfinished-fight saves,
+  migration and invalid discoveries. Nineteen core scenarios pass locally.
+- This is a room-level map milestone. Within-room terrain reveal, layer browsing,
+  lighting occlusion and final cartographic art remain future work. Presentation
+  and actual Unity migration require a new cloud artifact before being verified.
+
 ## Next, in order
 
-1. Verify automatic builds after fixing GitHub webhook permissions.
+1. Run the automatic map build; verify map visibility and version-1 save migration.
 2. Download/run that exact Web artifact; verify keyboard/mouse, input mapping,
    camera, light visibility, collision, room transitions, inventory and pause.
 3. Export/sign a minimal iOS app and install it through internal TestFlight.
@@ -72,5 +87,5 @@ checkpoint, instant placeholder layer transition, basic hitscan guns and equal-D
 damage/interval trades. Built-in renderer is a bootstrap baseline; production
 rendering is still subject to the technical trial.
 
-The debug map reveals room labels for testing. It is not the agreed terrain-map
-feature. The placeholder descent marker is not final hole geometry or animation.
+The map reveals visited room footprints, not terrain gradually within a room.
+The placeholder descent marker is not final hole geometry or animation.
