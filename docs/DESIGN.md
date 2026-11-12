@@ -64,10 +64,27 @@ progression devices are designed by hand. Procedural generation supplies
 environmental decoration only. Weapon variant generation is a separate system.
 Generated scenery must preserve gameplay routes and readability.
 
-Doors lead between rooms on the same layer; holes lead deeper; upward routes
-are rare. Players can dodge through rooms and use holes without defeating
+**Decided.** Connections between rooms should fit their environment; explicit
+framed doors are not required. In the sewer, a traversable pipe can connect rooms
+on the same layer. Author these passages as part of the environment and preserve
+readable routes for movement and escape. Upward routes are rare.
+
+Rooms can, and often should, have missing sections of floor. Falling into these
+**lethal floor gaps causes defeat**, following the normal checkpoint, territory
+setback and equipment-loss rules; it does not transport the robot to another
+layer. These gaps are deliberate authored terrain hazards, not missing geometry
+or procedural decoration.
+
+**Layer-descent holes are a separate feature and must appear absolute black.**
+They transport the robot to the layer below rather than causing defeat. Keep
+lethal floor gaps visually distinguishable from these absolute-black descent
+holes, including under the robot's lights. The exact treatment of lethal gaps'
+depth/edges remains to be established in art and playtesting.
+
+Players can dodge through rooms and use layer-descent holes without defeating
 enemies. The descent room holds the boss, checkpoint and an always-accessible
-hole. Killing the boss earns the layer checkpoint; passing it does not.
+layer-descent hole. Killing the boss earns the layer checkpoint; passing it does
+not.
 
 Access is mostly open: no mandatory weapon/item requirement for success.
 Hazards may damage health gradually; equipment can mitigate them. For example,
@@ -224,6 +241,9 @@ Working four-layer progression:
 | 4 | Beneath that: specific identity open |
 
 Cool concrete, rusted pipes, amber work lights, vivid markings and deep shafts.
+Use environment-native room passages such as traversable sewer pipes. Missing
+floor sections provide lethal fall hazards, distinct from absolute-black holes
+that lead to the next layer.
 Industrial cycles define the section, with destructible infrastructure supporting
 play. Water contributes to setting; deeper water mechanics belong to a later
 section. Wildlife inhabits the machinery, rather than maintenance robots being
